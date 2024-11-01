@@ -1,0 +1,20 @@
+Mode = "debug"
+Listen = ":5050"
+DatabaseURL = "user01:sql001@tcp(localhost:3306)/container?charset=utf8mb4&parseTime=True&loc=Local"
+SecretKey = "test"
+
+[KubesphereAPI]
+    URL = "https://kube.titannet.io"
+    UserName = "develop"
+    Password = "Admin123@"
+    Cluster  = "titan-k8s"
+
+[ChainAPI]
+	AddressPrefix   = "titan"
+	RPC             = "https://rpc.titannet.io"
+	TokenContractAddress = "titan1wav43uwma5vr22kqqlj04w2nhflwyshrmzmhy8ult2qmvqkehqrsypsw6s"
+	ServiceName     = "contract"
+	KeyringDir      = "/root/.titan"
+    FaucetGas       = "10000uttnt"
+    FaucetToken     = "1"
+    OrderContractAddress = "titan1mt3g5wx9zmzpavty4mlwlxj3mste5usg4c7l7e4twfvua6f3yq6sr0ce06"
