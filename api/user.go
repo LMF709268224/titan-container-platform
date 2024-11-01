@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"titan-container-platform/chain"
 	"titan-container-platform/core"
 	"titan-container-platform/core/dao"
+	"titan-container-platform/core/token"
 	"titan-container-platform/errors"
 	"titan-container-platform/kubesphere"
 
@@ -138,9 +138,10 @@ func getTokenHandler(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
 	id := claims[identityKey].(string)
 
-	err := chain.ClaimTokens(id)
-	if err != nil {
-		c.JSON(http.StatusOK, respError(errors.ErrNotFound))
+	code, err := token.ClaimTokens(id)
+	if code > 0 {
+		log.Errorf("getTokenHandler err:%v", err)
+		c.JSON(http.StatusOK, respErrorCode(code, c))
 		return
 	}
 
@@ -153,7 +154,7 @@ func getBalanceHandler(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
 	id := claims[identityKey].(string)
 
-	balance, err := chain.GetBalance(id)
+	balance, err := token.GetBalance(id)
 	if err != nil {
 		c.JSON(http.StatusOK, respError(errors.ErrNotFound))
 		return

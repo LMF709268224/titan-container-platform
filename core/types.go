@@ -35,6 +35,7 @@ type Order struct {
 	RAMSize     int         `db:"ram" json:"ram"`
 	StorageSize int         `db:"storage" json:"storage"`
 	Duration    int         `db:"duration" json:"duration"` // Hour
+	Price       int         `db:"price" json:"price"`
 	Status      OrderStatus `db:"status" json:"status"`
 	CreatedAt   time.Time   `db:"created_at" json:"created_at"`
 }

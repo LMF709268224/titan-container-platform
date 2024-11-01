@@ -31,7 +31,7 @@ var (
 	serviceName   = ""
 	keyringDir    = ""
 	faucetGas     = ""
-	faucetToken   = ""
+	// faucetToken   = ""
 	orderContract = ""
 )
 
@@ -43,7 +43,7 @@ func Init(cfg *config.ChainAPIConfig) {
 	serviceName = cfg.ServiceName
 	keyringDir = cfg.KeyringDir
 	faucetGas = cfg.FaucetGas
-	faucetToken = cfg.FaucetToken
+	// faucetToken = cfg.FaucetToken
 	orderContract = cfg.OrderContractAddress
 
 	tc, err := cosmosclient.New(context.Background(),
@@ -62,6 +62,8 @@ func Init(cfg *config.ChainAPIConfig) {
 
 	qClient = qc
 	txClient = &tc
+
+	GetOrders([]string{"order-1"})
 }
 
 // func testSend() {
@@ -98,7 +100,8 @@ func getAccount() *cosmosaccount.Account {
 	return &acc
 }
 
-func faucetSend(toAddress string) error {
+// ClaimTokens transfers tokens to the specified address.
+func ClaimTokens(toAddress string, faucetToken string) error {
 	a := getAccount()
 	if a == nil {
 		return errors.New("no account found")
@@ -154,12 +157,12 @@ func faucetSend(toAddress string) error {
 	if err != nil {
 		return err
 	}
-	// log.Infoln(res)
 
 	return nil
 }
 
-func balance(toAddress string) (string, error) {
+// GetBalance retrieves the balance for the specified address.
+func GetBalance(toAddress string) (string, error) {
 	a := getAccount()
 	if a == nil {
 		return "", errors.New("no account found")
@@ -249,4 +252,56 @@ func sendOrder(id string, cpu, memory, disk, duration int, coin string) error {
 	log.Infoln(res)
 
 	return nil
+}
+
+// TokenOrder represents an order for a token with a unique ID and duration.
+type TokenOrder struct {
+	ID          string `json:"id,omitempty"`
+	Duration    uint64 `json:"duration,omitempty"`
+	Initiator   string `json:"initiator,omitempty"`
+	LockedFunds uint64 `json:"locked_funds,omitempty"`
+	Resource    struct {
+		CPU    uint32 `json:"cpu,omitempty"`
+		Memory uint32 `json:"memory,omitempty"`
+		Disk   uint32 `json:"disk,omitempty"`
+	} `json:"resource"`
+	StartHeight uint64 `json:"start_height,omitempty"`
+	Status      string `json:"status,omitempty"`
+}
+
+// GetOrders retrieves orders based on the provided order IDs.
+func GetOrders(ids []string) ([]*TokenOrder, error) {
+	a := getAccount()
+	if a == nil {
+		return nil, errors.New("no account found")
+	}
+
+	tokenBody := map[string]interface{}{
+		"orders": map[string]interface{}{
+			"order_ids": ids,
+		},
+	}
+
+	tokenJSONBody, err := json.Marshal(tokenBody)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenReq := &chaintypes.QuerySmartContractStateRequest{Address: orderContract, QueryData: tokenJSONBody}
+
+	// Send message and get response
+	res, err := qClient.SmartContractState(context.Background(), tokenReq)
+	if err != nil {
+		log.Errorf("balance SmartContractState err:%s", err.Error())
+		return nil, err
+	}
+
+	var list []*TokenOrder
+	err = json.Unmarshal(res.Data, &list)
+	if err != nil {
+		log.Fatalf("balance Error Unmarshal JSON: %v", err)
+		return nil, err
+	}
+
+	return list, nil
 }

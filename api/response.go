@@ -21,7 +21,7 @@ func respJSON(v interface{}) gin.H {
 }
 
 func respError(e error) gin.H {
-	var apiError err.ApiError
+	var apiError err.APIError
 	if !errors.As(e, &apiError) {
 		apiError = err.ErrUnknown
 	}

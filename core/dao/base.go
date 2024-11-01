@@ -25,8 +25,10 @@ const (
 )
 
 const (
-	userInfoTable  = "users"
-	orderInfoTable = "orders"
+	userInfoTable     = "users"
+	orderInfoTable    = "orders"
+	userClaimsTable   = "user_claims"
+	hourlyQuotasTable = "hourly_quotas"
 )
 
 // ErrNoRow is returned when no matching row is found in the database.
@@ -75,6 +77,8 @@ func initTables() error {
 	// Execute table creation statements
 	tx.MustExec(fmt.Sprintf(cUserTable, userInfoTable))
 	tx.MustExec(fmt.Sprintf(cOrderTable, orderInfoTable))
+	tx.MustExec(fmt.Sprintf(cUserClaimsTable, userClaimsTable))
+	tx.MustExec(fmt.Sprintf(cHourlyQuotasTable, hourlyQuotasTable))
 
 	return tx.Commit()
 }
@@ -88,7 +92,7 @@ func doExec() {
 	// if err != nil {
 	// 	log.Errorf("InitTables doExec err:%s", err.Error())
 	// }
-	// _, err := DB.Exec(fmt.Sprintf("ALTER TABLE %s ADD hash            VARCHAR(128) NOT NULL", assetDataTable))
+	// _, err := mDB.Exec(fmt.Sprintf("ALTER TABLE %s ADD price        INT           DEFAULT 0", orderInfoTable))
 	// if err != nil {
 	// 	log.Errorf("InitTables doExec err:%s", err.Error())
 	// }

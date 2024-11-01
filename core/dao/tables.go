@@ -16,12 +16,28 @@ var cOrderTable = `
 		id           VARCHAR(128)  NOT NULL UNIQUE,
 		account      VARCHAR(255)  NOT NULL,		
 		cpu          INT           DEFAULT 0,
-		ram       INT           DEFAULT 0,
+		ram          INT           DEFAULT 0,
 		storage      INT           DEFAULT 0,
-		duration       INT           DEFAULT 0,
+		duration     INT           DEFAULT 0,
 		status       INT           DEFAULT 0,
+		price        INT           DEFAULT 0,
 		created_at   DATETIME      DEFAULT CURRENT_TIMESTAMP,
 		PRIMARY KEY (id),
 		KEY idx_account (account),
 		KEY idx_status (status)
 	) ENGINE=InnoDB COMMENT='order info';`
+
+var cUserClaimsTable = `
+    CREATE TABLE if not exists %s (
+		account             VARCHAR(128)  NOT NULL UNIQUE,
+		amount              INT           DEFAULT 0,
+		last_claim          DATETIME      DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY (account)
+	) ENGINE=InnoDB COMMENT='user claims info';`
+
+var cHourlyQuotasTable = `
+    CREATE TABLE if not exists %s (
+		hour      TIMESTAMP  NOT NULL ,
+		amount    INT        DEFAULT 0,
+		PRIMARY KEY (hour)
+	) ENGINE=InnoDB COMMENT='user claims info';`

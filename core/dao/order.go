@@ -11,8 +11,8 @@ import (
 
 // CreateOrder creates a new order in the database.
 func CreateOrder(ctx context.Context, order *core.Order) error {
-	query := fmt.Sprintf(`INSERT INTO %s (id, account, cpu, ram, storage, duration, status)
-			VALUES (:id, :account, :cpu, :ram, :storage, :duration, :status);`, orderInfoTable)
+	query := fmt.Sprintf(`INSERT INTO %s (id, account, cpu, ram, storage, duration, status, price)
+			VALUES (:id, :account, :cpu, :ram, :storage, :duration, :status, :price);`, orderInfoTable)
 	_, err := mDB.NamedExec(query, order)
 
 	return err

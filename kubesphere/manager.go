@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	netURL "net/url"
 	"titan-container-platform/config"
@@ -25,6 +26,10 @@ var (
 	token = ""
 )
 
+const (
+	timeInterval = 100 * time.Minute
+)
+
 // Init initializes the base URL for the application.
 func Init(cfg *config.KubesphereAPIConfig) {
 	serverURL = cfg.URL
@@ -33,7 +38,18 @@ func Init(cfg *config.KubesphereAPIConfig) {
 	cluster = cfg.Cluster
 
 	token = getToken()
-	// TODO 定时获取token(2小时过期)
+	go startTimer()
+}
+
+func startTimer() {
+	ticker := time.NewTicker(timeInterval)
+	defer ticker.Stop()
+
+	for {
+		<-ticker.C
+
+		token = getToken()
+	}
 }
 
 // func test() {

@@ -15,10 +15,8 @@ import (
 )
 
 func getPriceHandler(c *gin.Context) {
-	claims := jwt.ExtractClaims(c)
-	account := claims[identityKey].(string)
-
-	log.Infoln("createOrderHandler account:", account)
+	// claims := jwt.ExtractClaims(c)
+	// account := claims[identityKey].(string)
 
 	cpu, _ := strconv.Atoi(c.Query("cpu"))
 	ram, _ := strconv.Atoi(c.Query("ram"))
@@ -42,13 +40,17 @@ func getOrderHistoryHandler(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
 	account := claims[identityKey].(string)
 
-	log.Infoln("createOrderHandler account:", account)
+	var list []*core.Order
+	total := int64(0)
 
 	size, _ := strconv.Atoi(c.Query("size"))
 	page, _ := strconv.Atoi(c.Query("page"))
-	// lang := c.GetHeader("Lang")
-
-	list, n, err := dao.LoadAccountOrders(c, account, page, size)
+	status, err := strconv.Atoi(c.Query("status"))
+	if err == nil {
+		list, total, err = dao.LoadAccountOrdersByStatus(c, account, core.OrderStatus(status), page, size)
+	} else {
+		list, total, err = dao.LoadAccountOrders(c, account, page, size)
+	}
 	if err != nil {
 		log.Errorf("getOrderHistoryHandler: %v", err)
 		c.JSON(http.StatusOK, respErrorCode(errors.InternalServer, c))
@@ -57,7 +59,7 @@ func getOrderHistoryHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, respJSON(JSONObject{
 		"list":  list,
-		"total": n,
+		"total": total,
 	}))
 }
 
@@ -65,16 +67,18 @@ func createOrderHandler(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
 	account := claims[identityKey].(string)
 
-	var params *core.OrderReq
-	if err := c.BindJSON(params); err != nil {
+	var params core.OrderReq
+	if err := c.BindJSON(&params); err != nil {
 		c.JSON(http.StatusOK, respErrorCode(errors.InvalidParams, c))
 		return
 	}
 
-	if checkOrderParams(params) > 0 {
+	if checkOrderParams(&params) > 0 {
 		c.JSON(http.StatusOK, respErrorCode(errors.InvalidParams, c))
 		return
 	}
+
+	price := order.CalculateTotalCost(&params)
 
 	orderID := uuid.NewString()
 	order := &core.Order{
@@ -85,6 +89,7 @@ func createOrderHandler(c *gin.Context) {
 		Duration:    params.Duration,
 		Status:      core.OrderStatusCreated,
 		ID:          orderID,
+		Price:       price,
 	}
 
 	err := dao.CreateOrder(c.Request.Context(), order)
@@ -104,15 +109,15 @@ func checkOrderParams(order *core.OrderReq) int {
 		return errors.InvalidParams
 	}
 
-	if order.RAMSize > 64 || order.CPUCores < 1 {
+	if order.RAMSize > 64 || order.RAMSize < 1 {
 		return errors.InvalidParams
 	}
 
-	if order.StorageSize > 4000 || order.CPUCores < 40 {
+	if order.StorageSize > 4000 || order.StorageSize < 40 {
 		return errors.InvalidParams
 	}
 
-	if order.Duration > 30*24 || order.CPUCores < 1 {
+	if order.Duration > 30*24 || order.Duration < 1 {
 		return errors.InvalidParams
 	}
 

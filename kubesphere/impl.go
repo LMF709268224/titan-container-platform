@@ -11,12 +11,6 @@ const (
 
 // CreateUserAccount creates a new user account with the provided details.
 func CreateUserAccount(userName string) error {
-	// pwd, err := generatePassword(12)
-	// if err != nil {
-	// 	log.Errorf("generatePassword: %s", err.Error())
-	// 	return "", err
-	// }
-
 	email := userName + "@titan.com"
 
 	body := map[string]interface{}{
@@ -30,34 +24,34 @@ func CreateUserAccount(userName string) error {
 		"spec": map[string]interface{}{"email": email, "password": defaultPassword},
 	}
 
-	rsp, err := doRequest("POST", "/kapis/iam.kubesphere.io/v1beta1/users", body)
+	_, err := doRequest("POST", "/kapis/iam.kubesphere.io/v1beta1/users", body)
 	if err != nil {
 		log.Errorf("CreateUserAccount err:%s", err.Error())
 		return err
 	}
 
-	log.Infoln("CreateUserAccount rsp-----")
-	log.Infoln(string(rsp))
+	// log.Infoln("CreateUserAccount rsp-----")
+	// log.Infoln(string(rsp))
 
 	return nil
 }
 
 // CreateSpaceAndResourceQuotas creates a space and resource quotas for a user.
 func CreateSpaceAndResourceQuotas(order, userName string, cpu, ram, storage int) error {
-	_, err := createUserSpace(order, userName)
+	err := createUserSpace(order, userName)
 	if err != nil {
 		log.Errorf("CreateUserSpace: %s", err.Error())
 		return err
 	}
 
 	time.Sleep(1 * time.Second)
-	_, err = changeWorkspaceMembers(order, userName)
+	err = changeWorkspaceMembers(order, userName)
 	if err != nil {
 		log.Errorf("changeWorkspaceMembers: %s", err.Error())
 		return err
 	}
 
-	_, err = createUserResourceQuotas(order, cpu, ram, storage)
+	err = createUserResourceQuotas(order, cpu, ram, storage)
 	if err != nil {
 		log.Errorf("CreateUserResourceQuotas: %s", err.Error())
 	}
@@ -66,7 +60,7 @@ func CreateSpaceAndResourceQuotas(order, userName string, cpu, ram, storage int)
 }
 
 // createUserSpace creates a user space for the given order and user.
-func createUserSpace(order, userName string) ([]byte, error) {
+func createUserSpace(order, userName string) error {
 	body := map[string]interface{}{
 		"apiVersion": "iam.kubesphere.io/v1beta1",
 		"kind":       "WorkspaceTemplate",
@@ -96,40 +90,40 @@ func createUserSpace(order, userName string) ([]byte, error) {
 		},
 	}
 
-	rsp, err := doRequest("POST", "/kapis/tenant.kubesphere.io/v1beta1/workspacetemplates", body)
+	_, err := doRequest("POST", "/kapis/tenant.kubesphere.io/v1beta1/workspacetemplates", body)
 	if err != nil {
 		log.Errorf("CreateUserSpace err:%s", err.Error())
-		return nil, err
+		return err
 	}
 
-	log.Infoln("CreateUserSpace rsp-----")
-	log.Infoln(string(rsp))
+	// log.Infoln("CreateUserSpace rsp-----")
+	// log.Infoln(string(rsp))
 
-	return nil, nil
+	return nil
 }
 
-func changeWorkspaceMembers(order, userName string) ([]byte, error) {
+func changeWorkspaceMembers(order, userName string) error {
 	body := map[string]interface{}{
 		"roleRef":  fmt.Sprintf("%s-self-provisioner", order),
 		"username": userName,
 	}
 
 	path := fmt.Sprintf("/kapis/iam.kubesphere.io/v1beta1/workspaces/%s/workspacemembers/%s", order, userName)
-	rsp, err := doRequest("PUT", path, body)
+	_, err := doRequest("PUT", path, body)
 	if err != nil {
 		log.Errorf("changeWorkspaceMembers err:%s", err.Error())
-		return nil, err
+		return err
 	}
 
-	log.Infoln("changeWorkspaceMembers rsp-----")
-	log.Infoln(string(rsp))
+	// log.Infoln("changeWorkspaceMembers rsp-----")
+	// log.Infoln(string(rsp))
 
-	return nil, nil
+	return nil
 }
 
 // createUserResourceQuotas creates resource quotas for a user.
 // It takes an order string and resource limits for CPU, ram, and storage.
-func createUserResourceQuotas(order string, cpu, ram, storage int) ([]byte, error) {
+func createUserResourceQuotas(order string, cpu, ram, storage int) error {
 	body := map[string]interface{}{
 		"metadata": map[string]interface{}{
 			"labels": map[string]interface{}{
@@ -154,14 +148,14 @@ func createUserResourceQuotas(order string, cpu, ram, storage int) ([]byte, erro
 	}
 
 	path := fmt.Sprintf("/clusters/%s/kapis/tenant.kubesphere.io/v1beta1/workspaces/%s/resourcequotas", cluster, order)
-	rsp, err := doRequest("POST", path, body)
+	_, err := doRequest("POST", path, body)
 	if err != nil {
 		log.Errorf("CreateUserResourceQuotas err:%s", err.Error())
-		return nil, err
+		return err
 	}
 
-	log.Infoln("CreateUserResourceQuotas rsp-----")
-	log.Infoln(string(rsp))
+	// log.Infoln("CreateUserResourceQuotas rsp-----")
+	// log.Infoln(string(rsp))
 
-	return nil, nil
+	return nil
 }

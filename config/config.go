@@ -30,6 +30,5 @@ type ChainAPIConfig struct {
 	ServiceName          string
 	KeyringDir           string
 	FaucetGas            string
-	FaucetToken          string
 	OrderContractAddress string
 }
